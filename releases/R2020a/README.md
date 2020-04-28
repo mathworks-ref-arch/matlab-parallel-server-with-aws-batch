@@ -90,16 +90,7 @@ If you are an administrator and do not plan to submit jobs to the cluster, you c
     setenv('AWS_DEFAULT_REGION', 'YOUR_AWS_DEFAULT_REGION');
     ```
 
-4. **If you are using a Windows client**, create or edit [the startup.m file](https://www.mathworks.com/help/matlab/ref/startup.html) to include the following MATLAB code:
-
-    ```matlab
-	pathEntryToAdd = fullfile(matlabshared.supportpkg.getSupportPackageRoot, "bin", computer('arch'));
-	existingPath = getenv("PATH");
-    newPath = strcat(existingPath, pathsep, pathEntryToAdd);
-    setenv("PATH", newPath);
-    ```
-
-5.  (Optional) Open the Cluster Profile Manager. To open the Cluster Profile Manager, on the Home tab, in the Environment section, select *Parallel* > *Create and Manage Clusters...*
+4.  (Optional) Open the Cluster Profile Manager. To open the Cluster Profile Manager, on the Home tab, in the Environment section, select *Parallel* > *Create and Manage Clusters...*
 
     Select the profile created by the wizard.  Validate your cluster by clicking the *Validate* button. The Cluster connection test (parcluster) and Job test (createJob) stages should pass successfully. **The remaining validation stages will not pass as communicating jobs are not supported.**
 
