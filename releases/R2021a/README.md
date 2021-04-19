@@ -63,9 +63,10 @@ After you click the Launch Stack button above, the "Quick create stack" page ope
 
 Identify the values of the outputs with keys 'IndependentJobDefinition', 'JobQueue', 'NumWorkers', and 'S3Bucket' for use in Step 3. If you are an administrator, pass this information to your end users.
 
-    ![Stack outputs on completion](../../img/cloudformation-stack-creation-complete.png)
+   ![Stack outputs on completion](../../img/cloudformation-stack-creation-complete.png)
 
 *Figure 1: Stack outputs on completion*
+
 
 ## Step 3: Connect to the Cluster from MATLAB
 
