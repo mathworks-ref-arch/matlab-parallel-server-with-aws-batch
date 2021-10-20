@@ -1,0 +1,879 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "MATLAB Parallel Server with AWS Batch.",
+  "Parameters": {
+    "ContainerImage": {
+      "Description": "Specify the Docker image to use to execute jobs. This parameter is prepopulated with the default MathWorks Docker image for MATLAB Parallel Server with AWS Batch. Alternatively specify a container repository in the form repository-url/image:tag.",
+      "Type": "String",
+      "Default": "mathworks/matlab-deps:r2021b-aws-batch"
+    },
+    "InstanceTypes": {
+      "Description": "Specify the Amazon EC2 instance types allowed as a comma-delimited list. You can specify instance families (for example, 'c4' or 'p3') or specific sizes within a family (for example, 'c4.8xlarge'). Use 'optimal' to pick instance types on the fly that match the demands of your job queue. For more information on instance types, see https://aws.amazon.com/ec2/instance-types/.",
+      "Type": "CommaDelimitedList",
+      "Default": "optimal"
+    },
+    "MaxWorkers": {
+      "Description": "Specify the maximum number of MATLAB workers that the cluster can run concurrently. This number must be less than or equal to the number of workers that your MATLAB Parallel Server license supports.",
+      "Type": "Number",
+      "MinValue": 1,
+      "Default": 1024
+    },
+    "EC2PricingModel": {
+      "Description": "Choose either On-Demand or Spot Pricing for the EC2 instances provisioned by AWS Batch. For more information on pricing, see https://aws.amazon.com/ec2/pricing.",
+      "Type": "String",
+      "Default": "On-Demand",
+      "AllowedValues": [
+        "On-Demand",
+        "Spot"
+      ]
+    },
+    "NumGPUsPerWorker": {
+      "Description": "Specify the number of GPUs for each MATLAB worker to use. If you specify a value greater than 0, you must specify at least one GPU-based instance type supported by AWS Batch in the Instance Types field. For a list of supported GPU-based instance types, see https://docs.aws.amazon.com/batch/latest/userguide/gpu-jobs.html.",
+      "Type": "Number",
+      "Default": 0,
+      "MinValue": 0
+    },
+    "NumVCPUsPerWorker": {
+      "Description": "Specify the number of vCPUs for each MATLAB worker to use. Two vCPUs per worker is recommended.",
+      "Type": "Number",
+      "MinValue": 1,
+      "Default": 2
+    },
+    "MemoryPerWorker": {
+      "Description": "Specify the amount of memory in MiB that each MATLAB worker can use. A minimum of 2000 MiB is required.",
+      "Type": "Number",
+      "MinValue": 2000,
+      "Default": 2000
+    },
+    "Subnets": {
+      "Description": "Select IDs of existing subnets for the EC2 instances provisioned by AWS Batch. All subnets must exist in the VPC you have selected. It is recommended that you select a subnet for each availability zone in the VPC you have selected.",
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "ConstraintDescription": "Must be the ID of existing subnets within the chosen VPC.",
+      "AllowedPattern": ".+"
+    },
+    "SpotBidPrice": {
+      "Description": "Specify the maximum percentage of On-Demand pricing you want to pay for Spot resources. This parameter is ignored if you select the 'On Demand' EC2 pricing model.",
+      "Type": "Number",
+      "MinValue": 10,
+      "Default": 100
+    },
+    "VPC": {
+      "Description": "Select the ID of an existing VPC in which to deploy this stack.",
+      "Type": "AWS::EC2::VPC::Id",
+      "ConstraintDescription": "Must be the ID of an existing VPC.",
+      "AllowedPattern": ".+"
+    }
+  },
+  "Rules": {
+    "SubnetsInVPC": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::EachMemberEquals": [
+              {
+                "Fn::ValueOfAll": [
+                  "AWS::EC2::Subnet::Id",
+                  "VpcId"
+                ]
+              },
+              {
+                "Ref": "VPC"
+              }
+            ]
+          },
+          "AssertDescription": "All subnets must exist in the VPC you have selected."
+        }
+      ]
+    }
+  },
+  "Mappings": {
+    "RegionMap": {
+      "me-south-1": {
+        "SnapshotID": "snap-0de2e60704b38b698"
+      },
+      "ap-east-1": {
+        "SnapshotID": "snap-06aa5f1fc16544dff"
+      },
+      "ap-south-1": {
+        "SnapshotID": "snap-07d8cfb44ae531a1f"
+      },
+      "ap-northeast-1": {
+        "SnapshotID": "snap-05f03bcde09ac0aad"
+      },
+      "ap-northeast-2": {
+        "SnapshotID": "snap-0a40abdd2a67b0488"
+      },
+      "ap-southeast-1": {
+        "SnapshotID": "snap-080de17c690e8c07b"
+      },
+      "ap-southeast-2": {
+        "SnapshotID": "snap-05fcce3e49a855328"
+      },
+      "us-east-1": {
+        "SnapshotID": "snap-0c420e56b89cbf0c7"
+      },
+      "us-east-2": {
+        "SnapshotID": "snap-05ee06b0466a8e76f"
+      },
+      "us-west-1": {
+        "SnapshotID": "snap-0aea5303896d9588c"
+      },
+      "us-west-2": {
+        "SnapshotID": "snap-003bfb9ecc243177b"
+      },
+      "ca-central-1": {
+        "SnapshotID": "snap-0dd3b7a10cd07fdc8"
+      },
+      "eu-central-1": {
+        "SnapshotID": "snap-00b3c2b1461c2560b"
+      },
+      "eu-west-1": {
+        "SnapshotID": "snap-0eee3ec220b239b0b"
+      },
+      "eu-west-2": {
+        "SnapshotID": "snap-0a396e765f315dbef"
+      },
+      "eu-west-3": {
+        "SnapshotID": "snap-0ebd6acf422aa8b53"
+      },
+      "eu-north-1": {
+        "SnapshotID": "snap-0124bd1eacd15940b"
+      },
+      "sa-east-1": {
+        "SnapshotID": "snap-0ada1b6d334b769f7"
+      }
+    },
+    "Map": {
+      "EBSDeviceName": {
+        "SATA": "/dev/sdb"
+      },
+      "MatlabRoot": {
+        "EC2Instance": "/usr/local/matlab",
+        "Container": "/usr/local/matlab"
+      }
+    }
+  },
+  "Conditions": {
+    "UsingSpot": {
+      "Fn::Equals": [
+        "Spot",
+        {
+          "Ref": "EC2PricingModel"
+        }
+      ]
+    },
+    "UsingGPUs": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            "0",
+            {
+              "Ref": "NumGPUsPerWorker"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "EC2 Security Group for instances launched in the VPC by Batch",
+        "VpcId": {
+          "Ref": "VPC"
+        }
+      }
+    },
+    "BatchServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "batch.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
+        ]
+      }
+    },
+    "IamInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "EcsInstanceRole"
+          }
+        ]
+      }
+    },
+    "EcsInstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2008-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role",
+          "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        ]
+      }
+    },
+    "SpotIamFleetRole": {
+      "Type": "AWS::IAM::Role",
+      "Condition": "UsingSpot",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "spotfleet.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
+        ]
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ]
+      }
+    },
+    "MultiplyFunctionLambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "/*",
+                " * Copyright 2019 The MathWorks, Inc.",
+                " */",
+                "",
+                "var response = require('cfn-response');",
+                "exports.handler = function(event, context) {",
+                "    var result = parseInt(event.ResourceProperties.Op1) * parseInt(event.ResourceProperties.Op2);",
+                "    response.send(event, context, response.SUCCESS, {Value: result});",
+                "};"
+              ]
+            ]
+          }
+        },
+        "Runtime": "nodejs12.x"
+      }
+    },
+    "MaxVCPUs": {
+      "Type": "Custom::Multiply",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "MultiplyFunctionLambda",
+            "Arn"
+          ]
+        },
+        "Op1": {
+          "Ref": "NumVCPUsPerWorker"
+        },
+        "Op2": {
+          "Ref": "MaxWorkers"
+        }
+      }
+    },
+    "IndependentJobDefinition": {
+      "Type": "AWS::Batch::JobDefinition",
+      "Properties": {
+        "Type": "container",
+        "ContainerProperties": {
+          "Image": {
+            "Ref": "ContainerImage"
+          },
+          "Vcpus": {
+            "Ref": "NumVCPUsPerWorker"
+          },
+          "Memory": {
+            "Ref": "MemoryPerWorker"
+          },
+          "Command": [],
+          "Volumes": [
+            {
+              "Host": {
+                "SourcePath": {
+                  "Fn::FindInMap": [
+                    "Map",
+                    "MatlabRoot",
+                    "EC2Instance"
+                  ]
+                }
+              },
+              "Name": "matlab"
+            }
+          ],
+          "MountPoints": [
+            {
+              "ContainerPath": {
+                "Fn::FindInMap": [
+                  "Map",
+                  "MatlabRoot",
+                  "Container"
+                ]
+              },
+              "ReadOnly": false,
+              "SourceVolume": "matlab"
+            }
+          ],
+          "ResourceRequirements": {
+            "Fn::If": [
+              "UsingGPUs",
+              [
+                {
+                  "Type": "GPU",
+                  "Value": {
+                    "Ref": "NumGPUsPerWorker"
+                  }
+                }
+              ],
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "JobQueue": {
+      "Type": "AWS::Batch::JobQueue",
+      "Properties": {
+        "Priority": 1,
+        "ComputeEnvironmentOrder": [
+          {
+            "Order": 1,
+            "ComputeEnvironment": {
+              "Ref": "ComputeEnvironment"
+            }
+          }
+        ]
+      }
+    },
+    "LaunchTemplate": {
+      "Type": "AWS::EC2::LaunchTemplate",
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": {
+                "Fn::FindInMap": [
+                  "Map",
+                  "EBSDeviceName",
+                  "SATA"
+                ]
+              },
+              "Ebs": {
+                "DeleteOnTermination": true,
+                "SnapshotId": {
+                  "Fn::FindInMap": [
+                    "RegionMap",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "SnapshotID"
+                  ]
+                },
+                "VolumeType": "gp2"
+              }
+            }
+          ],
+          "UserData": {
+            "Fn::Base64": {
+              "Fn::Join": [
+                "\n",
+                [
+                  "MIME-Version: 1.0",
+                  "Content-Type: multipart/mixed; boundary=\"==MYBOUNDARY==\"",
+                  "",
+                  "--==MYBOUNDARY==",
+                  "Content-Type: text/x-shellscript; charset=\"us-ascii\"",
+                  "",
+                  "#!/bin/sh",
+                  {
+                    "Fn::Sub": [
+                      "sudo mkdir -p ${MATLABROOT}\nsudo mount ${DEVICE_NAME} ${MATLABROOT}",
+                      {
+                        "DEVICE_NAME": {
+                          "Fn::FindInMap": [
+                            "Map",
+                            "EBSDeviceName",
+                            "SATA"
+                          ]
+                        },
+                        "MATLABROOT": {
+                          "Fn::FindInMap": [
+                            "Map",
+                            "MatlabRoot",
+                            "EC2Instance"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "--==MYBOUNDARY=="
+                ]
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ComputeEnvironment": {
+      "Type": "AWS::Batch::ComputeEnvironment",
+      "Properties": {
+        "Type": "MANAGED",
+        "ComputeResources": {
+          "Type": {
+            "Fn::If": [
+              "UsingSpot",
+              "SPOT",
+              "EC2"
+            ]
+          },
+          "MinvCpus": 0,
+          "DesiredvCpus": 0,
+          "MaxvCpus": {
+            "Fn::GetAtt": [
+              "MaxVCPUs",
+              "Value"
+            ]
+          },
+          "InstanceTypes": {
+            "Ref": "InstanceTypes"
+          },
+          "Subnets": {
+            "Ref": "Subnets"
+          },
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroup"
+            }
+          ],
+          "InstanceRole": {
+            "Ref": "IamInstanceProfile"
+          },
+          "BidPercentage": {
+            "Fn::If": [
+              "UsingSpot",
+              {
+                "Ref": "SpotBidPrice"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "SpotIamFleetRole": {
+            "Fn::If": [
+              "UsingSpot",
+              {
+                "Ref": "SpotIamFleetRole"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "LaunchTemplate": {
+            "LaunchTemplateId": {
+              "Ref": "LaunchTemplate"
+            }
+          }
+        },
+        "ServiceRole": {
+          "Ref": "BatchServiceRole"
+        }
+      }
+    },
+    "S3Bucket": {
+      "Type": "AWS::S3::Bucket"
+    },
+    "S3DeleteBucketsRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "lambda_basic_execution",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "s3-delete-bucket",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:DeleteBucket",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "S3Bucket",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "s3-delete-object",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:DeleteObject"
+                  ],
+                  "Resource": {
+                    "Fn::Join": [
+                      "/",
+                      [
+                        {
+                          "Fn::GetAtt": [
+                            "S3Bucket",
+                            "Arn"
+                          ]
+                        },
+                        "*"
+                      ]
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "EmptyBucketsLambda": {
+      "DependsOn": "S3Bucket",
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "S3DeleteBucketsRole",
+            "Arn"
+          ]
+        },
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "/*",
+                " * Copyright 2019 The MathWorks, Inc.",
+                " */",
+                "",
+                "'use strict';",
+                "",
+                "var AWS = require('aws-sdk');",
+                "var s3 = new AWS.S3();",
+                "",
+                "exports.handler = (event, context) => {",
+                "  console.log('Executing emptyBuckets lambda. Event: ' + JSON.stringify(event) + ', context: ' + JSON.stringify(context));",
+                "  if (event.RequestType === 'Delete') {",
+                "    var bucketName = event.ResourceProperties.BucketName;",
+                "    s3.listObjectsV2({'Bucket': bucketName}, function(err, result) {",
+                "      if (err) return sendResponse(event, context, 'FAILED', err);",
+                "      if (result.Contents.length > 0) {",
+                "        var objectList = result.Contents.map(c => ({'Key': c.Key}));",
+                "        var obj = {",
+                "          'Bucket': bucketName,",
+                "          'Delete': {",
+                "            'Objects': objectList",
+                "          }",
+                "        };",
+                "        console.log(JSON.stringify(obj));",
+                "        s3.deleteObjects(obj, function(e, data) {",
+                "          if (e) return sendResponse(event, context, 'FAILED', e);",
+                "          sendResponse(event, context, 'SUCCESS', {'Message': bucketName + ' emptied. ' + JSON.stringify(data)});",
+                "        });",
+                "      } else {",
+                "          sendResponse(event, context, 'SUCCESS', {'Message': bucketName + ' already empty.'});",
+                "      }",
+                "    });",
+                "  } else {",
+                "    sendResponse(event, context, 'SUCCESS', {'Message': 'Lambda created and run successfully'});",
+                "  }",
+                "};",
+                "",
+                "// From AWS user guide at https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/walkthrough-custom-resources-lambda-lookup-amiids.html",
+                "function sendResponse(event, context, responseStatus, responseData) {",
+                "",
+                "    var responseBody = JSON.stringify({",
+                "        Status: responseStatus,",
+                "        Reason: 'See the details in CloudWatch Log Stream: ' + context.logStreamName,",
+                "        PhysicalResourceId: context.logStreamName,",
+                "        StackId: event.StackId,",
+                "        RequestId: event.RequestId,",
+                "        LogicalResourceId: event.LogicalResourceId,",
+                "        Data: responseData",
+                "    });",
+                "",
+                "    console.log('RESPONSE BODY:\\n', responseBody);",
+                "",
+                "    var https = require('https');",
+                "    var url = require('url');",
+                "",
+                "    var parsedUrl = url.parse(event.ResponseURL);",
+                "    var options = {",
+                "        hostname: parsedUrl.hostname,",
+                "        port: 443,",
+                "        path: parsedUrl.path,",
+                "        method: 'PUT',",
+                "        headers: {",
+                "            'content-type': '',",
+                "            'content-length': responseBody.length",
+                "        }",
+                "    };",
+                "",
+                "    console.log('SENDING RESPONSE...\\n');",
+                "",
+                "    var request = https.request(options, function(response) {",
+                "        console.log('STATUS: ' + response.statusCode);",
+                "        console.log('HEADERS: ' + JSON.stringify(response.headers));",
+                "        // Tell AWS Lambda that the function execution is done",
+                "        context.done();",
+                "    });",
+                "",
+                "    request.on('error', function(error) {",
+                "        console.log('sendResponse Error:' + error);",
+                "        // Tell AWS Lambda that the function execution is done",
+                "        context.done();",
+                "    });",
+                "",
+                "    // write data to request body",
+                "    request.write(responseBody);",
+                "    request.end();",
+                "}"
+              ]
+            ]
+          }
+        },
+        "Runtime": "nodejs12.x"
+      }
+    },
+    "EmptyBuckets": {
+      "Type": "Custom::EmptyBuckets",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "EmptyBucketsLambda",
+            "Arn"
+          ]
+        },
+        "BucketName": {
+          "Ref": "S3Bucket"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ClusterMatlabRoot": {
+      "Value": {
+        "Fn::FindInMap": [
+          "Map",
+          "MatlabRoot",
+          "Container"
+        ]
+      },
+      "Description": "Path to MATLAB for workers."
+    },
+    "NumWorkers": {
+      "Value": {
+        "Ref": "MaxWorkers"
+      },
+      "Description": "The maximum number of MATLAB workers that the cluster can run concurrently."
+    },
+    "JobQueue": {
+      "Value": {
+        "Ref": "JobQueue"
+      },
+      "Description": "The AWS Batch job queue of the cluster."
+    },
+    "IndependentJobDefinition": {
+      "Value": {
+        "Ref": "IndependentJobDefinition"
+      },
+      "Description": "The AWS Batch job definition for independent MATLAB jobs."
+    },
+    "S3Bucket": {
+      "Value": {
+        "Ref": "S3Bucket"
+      },
+      "Description": "The Amazon S3 bucket for data transfer between client and worker MATLABs."
+    },
+    "MATLABVersion": {
+      "Value": "R2021b",
+      "Description": "The MATLAB version supported by the cluster."
+    }
+  },
+  "Metadata": {
+    "StackType": "MATLAB Parallel Server with AWS Batch",
+    "Release": "R2021b",
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Network Configuration"
+          },
+          "Parameters": [
+            "VPC",
+            "Subnets"
+          ]
+        },
+        {
+          "Label": {
+            "default": "MATLAB Worker Configuration"
+          },
+          "Parameters": [
+            "NumVCPUsPerWorker",
+            "NumGPUsPerWorker",
+            "MemoryPerWorker"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Batch Compute Environment Configuration"
+          },
+          "Parameters": [
+            "MaxWorkers",
+            "InstanceTypes",
+            "EC2PricingModel",
+            "SpotBidPrice"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Advanced Configuration"
+          },
+          "Parameters": [
+            "ContainerImage"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "VPC": {
+          "default": "VPC"
+        },
+        "Subnets": {
+          "default": "Subnets"
+        },
+        "NumVCPUsPerWorker": {
+          "default": "Number of vCPUs per MATLAB worker"
+        },
+        "NumGPUsPerWorker": {
+          "default": "Number of GPUs per MATLAB worker"
+        },
+        "MemoryPerWorker": {
+          "default": "Memory per MATLAB worker"
+        },
+        "MaxWorkers": {
+          "default": "Maximum number of MATLAB workers"
+        },
+        "EC2PricingModel": {
+          "default": "EC2 pricing model"
+        },
+        "ContainerImage": {
+          "default": "Container image"
+        },
+        "SpotBidPrice": {
+          "default": "Spot bid price"
+        },
+        "InstanceTypes": {
+          "default": "Instance types"
+        }
+      }
+    }
+  }
+}
