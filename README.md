@@ -4,7 +4,7 @@
 
 Before starting, you must have the following:
 
-* MATLAB Parallel Server license. For more information on how to configure your license for cloud use, see [MATLAB Parallel Server on the Cloud](https://www.mathworks.com/help/licensingoncloud/matlab-parallel-server-on-the-cloud.html).
+* MATLAB Parallel Server license. For more information on how to configure your license for cloud use, see [MATLAB Parallel Server on the Cloud](https://www.mathworks.com/help/install/license/licensing-for-mathworks-products-running-on-the-cloud.html).
 
 * MATLAB® and Parallel Computing Toolbox™ on your desktop.
 
