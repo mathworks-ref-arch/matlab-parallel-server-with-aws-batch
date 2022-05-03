@@ -89,58 +89,58 @@
   "Mappings": {
     "RegionMap": {
       "us-east-1": {
-        "SnapshotID": "snap-02a108b5882bf2e40"
+        "SnapshotID": "snap-029e324c96b00b7df"
       },
       "us-east-2": {
-        "SnapshotID": "snap-0330de39ba1347ee1"
+        "SnapshotID": "snap-072b0206f327916ce"
       },
       "us-west-1": {
-        "SnapshotID": "snap-0fa664728f1373bf1"
+        "SnapshotID": "snap-0c79833381acee28c"
       },
       "us-west-2": {
-        "SnapshotID": "snap-04aef81573eda2670"
+        "SnapshotID": "snap-0cb24cbf0f8c984d0"
       },
       "ca-central-1": {
-        "SnapshotID": "snap-0ed54878e046d39c5"
+        "SnapshotID": "snap-0e69f68d3e81137b0"
       },
       "eu-central-1": {
-        "SnapshotID": "snap-07a7ae6ed3297df2f"
+        "SnapshotID": "snap-0e71395e44c0af522"
       },
       "eu-west-1": {
-        "SnapshotID": "snap-088e9bc34f87398c4"
+        "SnapshotID": "snap-040980feb9451e5b3"
       },
       "eu-west-2": {
-        "SnapshotID": "snap-06302d323c4aee271"
+        "SnapshotID": "snap-020ea814bd070dc2d"
       },
       "eu-west-3": {
-        "SnapshotID": "snap-039c1003fc450c37b"
+        "SnapshotID": "snap-0eec36f549c0070fc"
       },
       "eu-north-1": {
-        "SnapshotID": "snap-033605423ee2a8802"
+        "SnapshotID": "snap-047674307f01a0482"
       },
       "sa-east-1": {
-        "SnapshotID": "snap-0a2b799944f4ed29f"
+        "SnapshotID": "snap-0eaf79da63b08f9c0"
       },
       "me-south-1": {
-        "SnapshotID": "snap-0857dc5bb42d856fb"
+        "SnapshotID": "snap-0e02b4af6fd9a29bd"
       },
       "ap-east-1": {
-        "SnapshotID": "snap-07fcfa367cb510255"
+        "SnapshotID": "snap-0664ee6f0b553a451"
       },
       "ap-south-1": {
-        "SnapshotID": "snap-016c3c071149f0236"
+        "SnapshotID": "snap-032214aaa02f9bf4b"
       },
       "ap-northeast-1": {
-        "SnapshotID": "snap-0594af2fa906a80f1"
+        "SnapshotID": "snap-05a7a9de61f6e5788"
       },
       "ap-northeast-2": {
-        "SnapshotID": "snap-0e489245439e0e915"
+        "SnapshotID": "snap-03556c950d172a56d"
       },
       "ap-southeast-1": {
-        "SnapshotID": "snap-08a3978bbe549fddf"
+        "SnapshotID": "snap-09d114bddaab0c43b"
       },
       "ap-southeast-2": {
-        "SnapshotID": "snap-0c648aca20048e3eb"
+        "SnapshotID": "snap-04aabfd5a93820a77"
       }
     },
     "Map": {
