@@ -25,6 +25,7 @@ To view instructions for deploying the MATLAB Parallel Server with AWS Batch ref
 
 | Release |
 | ------- |
+| [R2022b](releases/R2022b/README.md) |
 | [R2022a](releases/R2022a/README.md) |
 | [R2021b](releases/R2021b/README.md) |
 | [R2021a](releases/R2021a/README.md) |
