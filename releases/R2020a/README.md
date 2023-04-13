@@ -54,24 +54,10 @@ Identify the values of the outputs with keys 'IndependentJobDefinition', 'JobQue
 ## Step 3: Connect to the Cluster from MATLAB
 
 If you are an administrator and do not plan to submit jobs to the cluster, you can skip the following steps.
-1. Install the [Parallel Computing Toolbox plugin for MATLAB Parallel Server with AWS Batch](https://www.mathworks.com/matlabcentral/fileexchange/72125-parallel-computing-toolbox-plugin-for-matlab-parallel-server-with-aws-batch).  You can also install this plugin via the Add-On Manager in MATLAB.
 
-2. After installation, the Generic Profile Wizard launches in MATLAB.  Use this wizard to configure a cluster profile to connect to the cluster.  
+1. Install the [AWS Command Line Interface](https://aws.amazon.com/cli) tool on the client machine.
 
-    The wizard requires information about the AWS Batch cluster that must be obtained from the values of the stack's outputs. If you are an end user, contact your administrator for this information.  Otherwise, obtain the information from the *Outputs* view of the stack in the CloudFormation console, as described in [Step 2](#step-2-configure-the-cloud-resources).  Table 2 documents the stack output keys that correspond to the wizard field descriptions.
-
-    | **Wizard field description**        | **Stack output key**     |
-    | ------------------------------------| -------------------------|
-    | Job definition for independent jobs | IndependentJobDefinition |
-    | Job queue                           | JobQueue                 |
-    | S3 bucket                           | S3Bucket                 |
-    | Number of workers                   | NumWorkers               |
-
-    *Table 2: Wizard field descriptions and corresponding stack output keys*
-
-    Complete the wizard to create a cluster profile.
-
-3.  Configure your client machine with your AWS Credentials using the [AWS Command Line Interface tool](https://aws.amazon.com/cli/). Alternatively, you can set up your credentials by setting the environment variables listed in Table 3 on the client machine.  If you do not know your AWS Credentials, contact your administrator.
+2. Configure your client machine with your AWS credentials using the AWS Command Line Interface tool. Alternatively, you can set up your credentials by setting the environment variables listed in Table 2 on the client machine.  If you do not know your AWS credentials, contact your administrator.
 
     | **Environment variable** | **Description** |
     | -------------------------| ----------------|
@@ -80,7 +66,7 @@ If you are an administrator and do not plan to submit jobs to the cluster, you c
     | AWS_SESSION_TOKEN        | Specifies the session token value. Required if you are using temporary security credentials.|
     | AWS_DEFAULT_REGION       | Specifies the AWS Region to send the request to.  The value of this environment variable is typically determined automatically but you may wish to set it manually.|
 
-    *Table 3: Environment variables for specifying AWS credentials*
+    *Table 2: Environment variables for specifying AWS credentials*
 
     You can set the environment variables in your current MATLAB session using `setenv` as follows:
     ```matlab
@@ -90,11 +76,69 @@ If you are an administrator and do not plan to submit jobs to the cluster, you c
     setenv('AWS_DEFAULT_REGION', 'YOUR_AWS_DEFAULT_REGION');
     ```
 
-4.  (Optional) Open the Cluster Profile Manager. To open the Cluster Profile Manager, on the Home tab, in the Environment section, select *Parallel* > *Create and Manage Clusters...*
+3. Download or clone the [Parallel Computing Toolbox plugin for MATLAB Parallel Server with AWS Batch](https://github.com/mathworks/matlab-parallel-awsbatch-plugin.git) repository on GitHub. You can also download this plugin via the Add-On Manager in MATLAB.
 
-    Select the profile created by the wizard.  Validate your cluster by clicking the *Validate* button. The Cluster connection test (parcluster) and Job test (createJob) stages should pass successfully. **The remaining validation stages will not pass as communicating jobs are not supported.**
+4. Once you download the plugin files, create a cluster profile by using either the Cluster Profile Manager or the MATLAB command line. To open the Cluster Profile Manager in MATLAB, on the **Home** tab, in the **Environment** section, select **Parallel** > **Create and Manage Clusters**. Within the Cluster Profile Manager, select **Add Cluster Profile** > **Generic** from the menu to create a new Generic cluster profile.
+
+    Alternatively, for the command line workflow, create a new Generic cluster object by running:
+
+    ```matlab
+    c = parallel.cluster.Generic;
+    ```
+
+5. To configure the newly created `Generic` profile, set the properties given in the table below:
+
+    | **Property**          | **Value**                                      |  
+    | ----------------------|------------------------------------------------|
+    | JobStorageLocation    | Path where job data is to be stored on your machine|
+    | NumWorkers            | Number of workers used to configure the stack in [Step 2](#step-2-configure-the-cloud-resources)|
+    | ClusterMatlabRoot     | '/usr/local/matlab'                            |
+    | OperatingSystem       | 'unix'                                         |
+    | HasSharedFilesystem   | false                                          |
+    | PluginScriptsLocation | Full path to the folder containing the Parallel Computing Toolbox plugin files downloaded earlier|
+
+    *Table 3: Required properties to configure a cluster profile*
+
+    In the Cluster Profile Manager, set each property value in the boxes provided.
+    Alternatively, at the command line, set each property on the cluster object using dot notation:
+
+    ```matlab
+    c.JobStorageLocation = 'C:\MatlabJobs';
+    % etc.
+    ```
+
+    Table 3 gives the minimum properties required for `Generic` to work correctly.
+    For a full list of cluster properties, see the documentation for [`parallel.Cluster`](https://mathworks.com/help/parallel-computing/parallel.cluster.html).
+
+6. Once the minimum required properties are set for the `Generic` cluster, configure the following additional properties specific to the AWS Batch cluster stack created in [Step 2](#step-2-configure-the-cloud-resources):
+
+    | **Stack output key**                | **Description**          |
+    | ------------------------------------| -------------------------|
+    | IndependentJobDefinition            | AWS Batch job definition for independent jobs |
+    | JobQueue                            | Job queue of the AWS Batch cluster |
+    | S3Bucket                            | S3 Bucket for data transfer between client and worker MATLAB engines |
+
+    *Table 4: AdditionalProperties field descriptions and corresponding stack output keys*
+
+    Use the stack's outputs to obtain the above values. If you are an end user, contact your administrator for this information.  Otherwise, obtain the information from the *Outputs* view of the stack in the CloudFormation console, as described in [Step 2](#step-2-configure-the-cloud-resources). 
+
+    To configure these properties, in the Cluster Profile Manager, add new `AdditionalProperties` by clicking **Add** under the table of `AdditionalProperties` and populate the key-value pairs according to the values given in Table 4.
+    Alternatively, for the command line workflow, use dot notation to add these additional properties:
+
+    ```matlab
+    c.AdditionalProperties.IndependentJobDefinition = '<Job definition>';
+    ```
+
+7. To save your new profile, click **Done** in the Cluster Profile Manager UI. If creating the cluster using the command line, run:
+
+    ```matlab
+    saveAsProfile(c, "myAwsBatchCluster");
+    ```
+
+8. Validate your cluster by clicking the *Validate* button. The Cluster connection test (parcluster) and Job test (createJob) stages should pass successfully. **The remaining validation stages will not pass as communicating jobs are not supported.**
 
 Your cluster is now set up for [batch processing MATLAB jobs](https://www.mathworks.com/help/parallel-computing/batch-processing.html).  The first time you submit a job to the cluster, MATLAB prompts you to log into your MathWorks account.
+
 
 ### Additional Information
 
