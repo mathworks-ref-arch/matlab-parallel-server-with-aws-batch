@@ -139,7 +139,6 @@ If you are an administrator and do not plan to submit jobs to the cluster, you c
 
 Your cluster is now set up for [batch processing MATLAB jobs](https://www.mathworks.com/help/parallel-computing/batch-processing.html).  The first time you submit a job to the cluster, MATLAB prompts you to log into your MathWorks account.
 
-
 ### Additional Information
 
 #### Delete Your Cloud Resources

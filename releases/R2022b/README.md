@@ -46,7 +46,6 @@ After you click the Launch Stack button above, the "Quick create stack" page ope
 | **Spot bid price** | Specify the maximum percentage of On-Demand pricing you want to pay for Spot resources. This parameter is ignored if you select the 'On Demand' EC2 pricing model. |
 | **VPC** | Select the ID of an existing VPC in which to deploy this stack. |
 
-
 *Table 1: Stack input parameters*
 
 3. Tick the box to accept that the template uses IAM roles. These roles provide the following permissions:

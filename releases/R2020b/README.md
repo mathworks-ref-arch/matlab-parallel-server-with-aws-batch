@@ -67,7 +67,6 @@ Identify the values of the outputs with keys 'IndependentJobDefinition', 'JobQue
 
 *Figure 1: Stack outputs on completion*
 
-
 ## Step 3: Connect to the Cluster from MATLAB
 
 If you are an administrator and do not plan to submit jobs to the cluster, you can skip the following steps.
