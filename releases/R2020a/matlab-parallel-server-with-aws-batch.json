@@ -85,10 +85,10 @@
   "Mappings": {
     "RegionMap": {
       "us-east-1": {
-        "SnapshotID": "snap-04c604ba49fde7bc7"
+        "SnapshotID": "snap-010ead482d78f8b60"
       },
       "eu-west-1": {
-        "SnapshotID": "snap-0f9418825d5d4c1f6"
+        "SnapshotID": "snap-0be074e4b9345c10f"
       }
     },
     "Map": {
@@ -260,7 +260,7 @@
             ]
           }
         },
-        "Runtime": "nodejs12.x"
+        "Runtime": "nodejs16.x"
       }
     },
     "MaxVCPUs": {
@@ -688,7 +688,7 @@
             ]
           }
         },
-        "Runtime": "nodejs12.x"
+        "Runtime": "nodejs16.x"
       }
     },
     "EmptyBuckets": {
