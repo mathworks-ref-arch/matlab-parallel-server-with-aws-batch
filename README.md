@@ -111,7 +111,6 @@ Lambda function that empties the S3 bucket at stack deletion. When empty, the S3
 Custom resource that uses the Lambda function to empty S3 bucket at stack deletion.
 
 # Enhancement Request
-Provide suggestions for additional features or capabilities using the following link: [https://www.mathworks.com/cloud/enhancement-request.html](https://www.mathworks.com/cloud/enhancement-request.html)
-
+Provide suggestions for additional features or capabilities using the following link: [https://www.mathworks.com/solutions/cloud.html](https://www.mathworks.com/solutions/cloud.html)
 # Technical Support
 If you require assistance or have a request for additional features or capabilities, please contact [MathWorks Technical Support](https://www.mathworks.com/support/contact_us.html).
