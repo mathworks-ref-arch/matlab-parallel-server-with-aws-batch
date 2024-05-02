@@ -235,7 +235,8 @@
     "MultiplyFunctionLambda": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
-        "Handler": "index.handler",
+        "Handler": "index.lambda_handler",
+        "Runtime": "python3.12",
         "Role": {
           "Fn::GetAtt": [
             "LambdaExecutionRole",
@@ -247,20 +248,24 @@
             "Fn::Join": [
               "\n",
               [
-                "/*",
-                " * Copyright 2019 The MathWorks, Inc.",
-                " */",
+                "# Copyright 2019-2024 The MathWorks, Inc.",
                 "",
-                "var response = require('cfn-response');",
-                "exports.handler = function(event, context) {",
-                "    var result = parseInt(event.ResourceProperties.Op1) * parseInt(event.ResourceProperties.Op2);",
-                "    response.send(event, context, response.SUCCESS, {Value: result});",
-                "};"
+                "import cfnresponse",
+                "",
+                "",
+                "def lambda_handler(event, context):",
+                "    try:",
+                "        result = (lambda op1, op2: op1 * op2)(",
+                "            int(event['ResourceProperties']['Op1']),",
+                "            int(event['ResourceProperties']['Op2'])",
+                "        )",
+                "        cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Value': result})",
+                "    except Exception as e:",
+                "        cfnresponse.send(event, context, cfnresponse.FAILED, {'Message': str(e)})"
               ]
             ]
           }
-        },
-        "Runtime": "nodejs16.x"
+        }
       }
     },
     "MaxVCPUs": {
@@ -583,112 +588,52 @@
       }
     },
     "EmptyBucketsLambda": {
-      "DependsOn": "S3Bucket",
       "Type": "AWS::Lambda::Function",
+      "DependsOn": "S3Bucket",
       "Properties": {
-        "Handler": "index.handler",
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "# Copyright 2017-2024 The MathWorks, Inc.",
+                "",
+                "import boto3",
+                "import cfnresponse",
+                "",
+                "",
+                "def lambda_handler(event, context):",
+                "    try:",
+                "        if 'RequestType' in event and 'ResourceProperties' in event:",
+                "            if event['RequestType'] == 'Delete':",
+                "                bucket_name = event['ResourceProperties']['BucketName']",
+                "",
+                "                print(f'# Deleting all objects in S3 bucket: {bucket_name}')",
+                "",
+                "                s3 = boto3.resource('s3')",
+                "                bucket = s3.Bucket(bucket_name)",
+                "                bucket.objects.all().delete()",
+                "",
+                "                cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Message': 'Bucket emptied successfully.'})",
+                "            else:",
+                "                cfnresponse.send(event, context, cfnresponse.SUCCESS, {'Message': 'Lambda created and run successfully.'})",
+                "        else:",
+                "            raise ValueError(\"Invalid event data received\")",
+                "    except Exception as e:",
+                "        cfnresponse.send(event, context, cfnresponse.FAILED, {'Message': str(e)})"
+              ]
+            ]
+          }
+        },
         "Role": {
           "Fn::GetAtt": [
             "S3DeleteBucketsRole",
             "Arn"
           ]
         },
-        "Code": {
-          "ZipFile": {
-            "Fn::Join": [
-              "\n",
-              [
-                "/*",
-                " * Copyright 2019 The MathWorks, Inc.",
-                " */",
-                "",
-                "'use strict';",
-                "",
-                "var AWS = require('aws-sdk');",
-                "var s3 = new AWS.S3();",
-                "",
-                "exports.handler = (event, context) => {",
-                "  console.log('Executing emptyBuckets lambda. Event: ' + JSON.stringify(event) + ', context: ' + JSON.stringify(context));",
-                "  if (event.RequestType === 'Delete') {",
-                "    var bucketName = event.ResourceProperties.BucketName;",
-                "    s3.listObjectsV2({'Bucket': bucketName}, function(err, result) {",
-                "      if (err) return sendResponse(event, context, 'FAILED', err);",
-                "      if (result.Contents.length > 0) {",
-                "        var objectList = result.Contents.map(c => ({'Key': c.Key}));",
-                "        var obj = {",
-                "          'Bucket': bucketName,",
-                "          'Delete': {",
-                "            'Objects': objectList",
-                "          }",
-                "        };",
-                "        console.log(JSON.stringify(obj));",
-                "        s3.deleteObjects(obj, function(e, data) {",
-                "          if (e) return sendResponse(event, context, 'FAILED', e);",
-                "          sendResponse(event, context, 'SUCCESS', {'Message': bucketName + ' emptied. ' + JSON.stringify(data)});",
-                "        });",
-                "      } else {",
-                "          sendResponse(event, context, 'SUCCESS', {'Message': bucketName + ' already empty.'});",
-                "      }",
-                "    });",
-                "  } else {",
-                "    sendResponse(event, context, 'SUCCESS', {'Message': 'Lambda created and run successfully'});",
-                "  }",
-                "};",
-                "",
-                "// From AWS user guide at https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/walkthrough-custom-resources-lambda-lookup-amiids.html",
-                "function sendResponse(event, context, responseStatus, responseData) {",
-                "",
-                "    var responseBody = JSON.stringify({",
-                "        Status: responseStatus,",
-                "        Reason: 'See the details in CloudWatch Log Stream: ' + context.logStreamName,",
-                "        PhysicalResourceId: context.logStreamName,",
-                "        StackId: event.StackId,",
-                "        RequestId: event.RequestId,",
-                "        LogicalResourceId: event.LogicalResourceId,",
-                "        Data: responseData",
-                "    });",
-                "",
-                "    console.log('RESPONSE BODY:\\n', responseBody);",
-                "",
-                "    var https = require('https');",
-                "    var url = require('url');",
-                "",
-                "    var parsedUrl = url.parse(event.ResponseURL);",
-                "    var options = {",
-                "        hostname: parsedUrl.hostname,",
-                "        port: 443,",
-                "        path: parsedUrl.path,",
-                "        method: 'PUT',",
-                "        headers: {",
-                "            'content-type': '',",
-                "            'content-length': responseBody.length",
-                "        }",
-                "    };",
-                "",
-                "    console.log('SENDING RESPONSE...\\n');",
-                "",
-                "    var request = https.request(options, function(response) {",
-                "        console.log('STATUS: ' + response.statusCode);",
-                "        console.log('HEADERS: ' + JSON.stringify(response.headers));",
-                "        // Tell AWS Lambda that the function execution is done",
-                "        context.done();",
-                "    });",
-                "",
-                "    request.on('error', function(error) {",
-                "        console.log('sendResponse Error:' + error);",
-                "        // Tell AWS Lambda that the function execution is done",
-                "        context.done();",
-                "    });",
-                "",
-                "    // write data to request body",
-                "    request.write(responseBody);",
-                "    request.end();",
-                "}"
-              ]
-            ]
-          }
-        },
-        "Runtime": "nodejs16.x"
+        "Handler": "index.lambda_handler",
+        "Runtime": "python3.12",
+        "Timeout": "60"
       }
     },
     "EmptyBuckets": {
