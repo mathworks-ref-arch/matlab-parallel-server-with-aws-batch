@@ -27,6 +27,7 @@ To view instructions for deploying the MATLAB Parallel Server with AWS Batch ref
 
 | Release |
 | ------- |
+| [R2025b](releases/R2025b/README.md) |
 | [R2025a](releases/R2025a/README.md) |
 | [R2024b](releases/R2024b/README.md) |
 | [R2024a](releases/R2024a/README.md) |
@@ -44,7 +45,7 @@ To view instructions for deploying the MATLAB Parallel Server with AWS Batch ref
 
 # Learn About Cluster Architecture
 
-This diagram illustrates the cluster architecture and operation of MATLAB Parallel Server with AWS Batch. When you use the [AWS CloudFormation templates](https://aws.amazon.com/cloudformation/) in this repository, it creates the AWS Batch Cluster and the following resources. For more information about each resource, see the [AWS CloudFormation template reference.](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-reference.html)
+This diagram illustrates the cluster architecture and operation of MATLAB Parallel Server with AWS Batch. When you use the [AWS CloudFormation templates](https://aws.amazon.com/cloudformation/) in this repository, it creates the AWS Batch Cluster and the following resources. For more information about each resource, see the [AWS CloudFormation template reference](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-reference.html).
 
 ![Cluster Architecture](img/MATLAB-Parallel-Server-with-AWS-Batch-architecture.png?raw=true)
 
@@ -119,7 +120,7 @@ Parallel Computing Toolbox and MATLAB Parallel Server software let you solve com
 AWS is a set of cloud services which allow you to build, deploy, and manage applications hosted in Amazon’s global network of data centers. Find out more about the range of [cloud-based products offered by AWS](https://aws.amazon.com/products/). Services deployed in AWS can be created, managed, and deleted using the AWS Management Console. For more information about the AWS Management Console, see [AWS Management Console](https://docs.aws.amazon.com/awsconsolehelpdocs/). 
 
 # Enhancement Request
-Provide suggestions for additional features or capabilities using the following link: [MATLAB and Simulink in the Cloud](https://www.mathworks.com/solutions/cloud.html)
+Provide suggestions for additional features or capabilities using the following link: [MATLAB and Simulink in the Cloud](https://www.mathworks.com/solutions/cloud.html).
 
 # Technical Support
 If you require assistance or have a request for additional features or capabilities, contact [MathWorks Technical Support](https://www.mathworks.com/support/contact_us.html).
