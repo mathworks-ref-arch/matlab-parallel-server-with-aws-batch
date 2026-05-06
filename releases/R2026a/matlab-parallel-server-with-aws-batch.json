@@ -89,55 +89,55 @@
   "Mappings": {
     "RegionMap": {
       "us-east-1": {
-        "SnapshotID": "snap-0a66632ba088110d2"
+        "SnapshotID": "snap-003281b5f7e2a45e8"
       },
       "us-east-2": {
-        "SnapshotID": "snap-044cfb23b7660ce45"
+        "SnapshotID": "snap-0b20bc6978b2b6ae8"
       },
       "us-west-1": {
-        "SnapshotID": "snap-0756749fbb2323ccb"
+        "SnapshotID": "snap-038e1628728a3069e"
       },
       "us-west-2": {
-        "SnapshotID": "snap-0af4c4706a87882d2"
+        "SnapshotID": "snap-08ffef199b22d33c6"
       },
       "ca-central-1": {
-        "SnapshotID": "snap-091c9585c0318476d"
+        "SnapshotID": "snap-03305d7388fb2fc74"
       },
       "eu-central-1": {
-        "SnapshotID": "snap-0513a102cf8bc1f1e"
+        "SnapshotID": "snap-0e4600d82dcd3e72b"
       },
       "eu-west-1": {
-        "SnapshotID": "snap-0a32e1ebe73b53ef1"
+        "SnapshotID": "snap-0e851484994dd8878"
       },
       "eu-west-2": {
-        "SnapshotID": "snap-070c7a8119373c7b1"
+        "SnapshotID": "snap-044c0aeef63b66dc7"
       },
       "eu-west-3": {
-        "SnapshotID": "snap-087eebbffcb4bca46"
+        "SnapshotID": "snap-0a7dc315d1645ca13"
       },
       "eu-north-1": {
-        "SnapshotID": "snap-01e1eb64be1a3b2a9"
+        "SnapshotID": "snap-06847fc923592750a"
       },
       "sa-east-1": {
-        "SnapshotID": "snap-0108b74f915223898"
+        "SnapshotID": "snap-043a65bc306ef711b"
       },
       "ap-east-1": {
-        "SnapshotID": "snap-00a62b97d3524ba06"
+        "SnapshotID": "snap-009b423da2b49456c"
       },
       "ap-south-1": {
-        "SnapshotID": "snap-0b8db98f84eea7a54"
+        "SnapshotID": "snap-08a9463e5b9ff6e8a"
       },
       "ap-northeast-1": {
-        "SnapshotID": "snap-0e75ab39f4f0111ea"
+        "SnapshotID": "snap-00c469aea1c1a3fc1"
       },
       "ap-northeast-2": {
-        "SnapshotID": "snap-031b6d820108d9d5c"
+        "SnapshotID": "snap-0cc7aa3d8255b2182"
       },
       "ap-southeast-1": {
-        "SnapshotID": "snap-0706f380aa2a860b7"
+        "SnapshotID": "snap-0e39dfe67c9dc87bb"
       },
       "ap-southeast-2": {
-        "SnapshotID": "snap-093a8a5b6a63871e3"
+        "SnapshotID": "snap-086fc57a29b7fe472"
       }
     },
     "Map": {
